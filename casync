@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+port=2222
+nixCasyncBin="$1"
+chunkSize="$2"
+storePath="$3"
+resultsFile="$4"
+
+####################
+# nix-casync metrics
+####################
+
+casyncDir=$(mktemp -d)
+trap 'rm -rf ${casyncDir}' EXIT
+
+${nixCasyncBin} serve --cache-path="${casyncDir}" --listen-addr="[::]:${port}" --avg-chunk-size="${chunkSize}" &
+nixCasyncPid=$!
+trap 'rm -rf ${casyncDir}; kill -2 ${nixCasyncPid}' EXIT
+
+# Disabling compression: we're copying locally, it just slows down the
+# test...
+nix copy \
+  --extra-experimental-features nix-command \
+  --to "http://[::]:${port}?compression=none" "${storePath}" \
+  --refresh
+
+echo "Chunk Size;Chunk Name" > "${resultsFile}"
+find "${casyncDir}" -name "*.cacnk" -printf "%s;%f\n" >> "${resultsFile}"

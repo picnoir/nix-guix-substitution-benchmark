@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+shopt -s globstar
+
+storePath="$1"
+
+####################
+# Files Metrics
+####################
+
+uncompressedResultFile="${2}"
+compressedResultFile="${3}"
+export tmpCompressedFiles
+tmpCompressedFiles="$(mktemp -d)"
+trap 'rm -rf ${tmpCompressedFiles}' EXIT
+
+echo "Sha256;Size" > "${uncompressedResultFile}"
+echo "Sha256;Size" > "${compressedResultFile}"
+
+closure=$(nix path-info -r "${storePath}")
+
+for path in ${closure}; do
+    find "${path}" -type f -print0 | \
+        while read -r -d $'\0' file
+        do
+            size=$(stat --printf="%s" "$file")
+            sha256=$(sha256sum "$file" | cut -d " " -f 1)
+            printf "%s;%s\n" "${sha256}" "${size}" >> "${uncompressedResultFile}"
+            xz -zc6e "${file}" > "${tmpCompressedFiles}"/"${sha256}".xz
+        done
+done
+
+find "${tmpCompressedFiles}" -type f -name "*.xz" -exec bash -c '
+   size=$(stat --printf="%s" "$1")
+   sha256=$(sha256sum "$1" | cut -d " " -f 1)
+   printf "%s;%s\n" "${sha256}" "${size}"
+' shell {} ";" >> "${compressedResultFile}"

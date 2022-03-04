@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+resultsRoot=$(readlink -f "$1")
+
+echo "[+] Realizing nix closures"
+casync="$(nix-build -A nix-casync)"/bin/nix_casync
+massRebuildBeforeClosure="$(nix-build -A massRebuild.before)"
+massRebuildAfterClosure="$(nix-build -A massRebuild.after)"
+nixpkgsChannelsStableClosure="$(nix-build -A nixpkgsChannels.stable)"
+nixpkgsChannelsUnstableClosure="$(nix-build -A nixpkgsChannels.unstable)"
+firefoxBumpBeforeClosure="$(nix-build -A firefoxBump.before)"
+firefoxBumpAfterClosure="$(nix-build -A firefoxBump.after)"
+
+function collectMetricsForClosure () {
+    echo "[+] Collecting Casync-related Metrics"
+    ./casync "${casync}" 65536 "${closure}" "${resultsDir}"/casync.csv
+    echo "[+] Collecting NAR-related Metrics"
+    ./nar "${closure}" > "${resultsDir}"/nar.csv
+    echo "[+] Collecting file-related Metrics"
+    ./file "${closure}" "${resultsDir}"/file.csv "${resultsDir}"/file-xz-compressed.csv
+}
+
+# Before mass rebuild
+resultsDir="${resultsRoot}"/before-mass-rebuild
+mkdir -p "${resultsDir}"
+closure="${massRebuildBeforeClosure}"
+collectMetricsForClosure
+
+# After mass rebuild
+resultsDir="${resultsRoot}"/after-mass-rebuild
+mkdir -p "${resultsDir}"
+closure="${massRebuildAfterClosure}"
+collectMetricsForClosure
+
+# Channel stable
+resultsDir="${resultsRoot}"/nixpkgs-stable-channel
+mkdir -p "${resultsDir}"
+closure="${nixpkgsChannelsStableClosure}"
+collectMetricsForClosure
+
+# Channel Unstable
+resultsDir="${resultsRoot}"/nixpkgs-unstable-channel
+mkdir -p "${resultsDir}"
+closure="${nixpkgsChannelsUnstableClosure}"
+collectMetricsForClosure
+
+# Before Firefox Bump
+resultsDir="${resultsRoot}"/before-firefox-bump
+mkdir -p "${resultsDir}"
+closure="${firefoxBumpBeforeClosure}"
+collectMetricsForClosure
+
+# After Firefox Bump
+resultsDir="${resultsRoot}"/after-firefox-bump
+mkdir -p "${resultsDir}"
+closure="${firefoxBumpAfterClosure}"
+collectMetricsForClosure

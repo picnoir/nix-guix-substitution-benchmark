@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+storePath="$1"
+
+binaryCacheDir=$(mktemp -d)
+trap 'rm -rf ${binaryCacheDir}' EXIT
+
+nix copy --to "file://${binaryCacheDir}" "${storePath}"
+
+echo "Nar Size;Nar Name"
+find "${binaryCacheDir}"/nar -name "*.nar.xz" -printf "%s;%f\n"
