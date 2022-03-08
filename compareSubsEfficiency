@@ -12,6 +12,12 @@ nixpkgsChannelsStableClosure="$(nix-build -A nixpkgsChannels.stable)"
 nixpkgsChannelsUnstableClosure="$(nix-build -A nixpkgsChannels.unstable)"
 firefoxBumpBeforeClosure="$(nix-build -A firefoxBump.before)"
 firefoxBumpAfterClosure="$(nix-build -A firefoxBump.after)"
+gimpBumpBeforeClosure="$(nix-build -A gimpBump.before)"
+gimpBumpAfterClosure="$(nix-build -A gimpBump.after)"
+emacsBumpBeforeClosure="$(nix-build -A emacsBump.before)"
+emacsBumpAfterClosure="$(nix-build -A emacsBump.after)"
+openmpiBumpBeforeClosure="$(nix-build -A openmpiBump.before)"
+openmpiBumpAfterClosure="$(nix-build -A openmpiBump.after)"
 
 function collectMetricsForClosure () {
     echo "[+] Collecting Casync-related Metrics"
@@ -56,4 +62,40 @@ collectMetricsForClosure
 resultsDir="${resultsRoot}"/after-firefox-bump
 mkdir -p "${resultsDir}"
 closure="${firefoxBumpAfterClosure}"
+collectMetricsForClosure
+
+# Before gimp Bump
+resultsDir="${resultsRoot}"/before-gimp-bump
+mkdir -p "${resultsDir}"
+closure="${gimpBumpBeforeClosure}"
+collectMetricsForClosure
+
+# After gimp Bump
+resultsDir="${resultsRoot}"/after-gimp-bump
+mkdir -p "${resultsDir}"
+closure="${gimpBumpAfterClosure}"
+collectMetricsForClosure
+
+# Before emacs Bump
+resultsDir="${resultsRoot}"/before-emacs-bump
+mkdir -p "${resultsDir}"
+closure="${emacsBumpBeforeClosure}"
+collectMetricsForClosure
+
+# After emacs Bump
+resultsDir="${resultsRoot}"/after-emacs-bump
+mkdir -p "${resultsDir}"
+closure="${emacsBumpAfterClosure}"
+collectMetricsForClosure
+
+# Before openmpi Bump
+resultsDir="${resultsRoot}"/before-openmpi-bump
+mkdir -p "${resultsDir}"
+closure="${openmpiBumpBeforeClosure}"
+collectMetricsForClosure
+
+# After openmpi Bump
+resultsDir="${resultsRoot}"/after-openmpi-bump
+mkdir -p "${resultsDir}"
+closure="${openmpiBumpAfterClosure}"
 collectMetricsForClosure
