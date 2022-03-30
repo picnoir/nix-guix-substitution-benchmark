@@ -5,7 +5,7 @@ let
   }) {};
   iPython = jupyter.kernels.iPythonWith {
     name = "python";
-    packages = p: with p; [ numpy pandas matplotlib ];
+    packages = p: with p; [ numpy pandas matplotlib tabulate ];
   };
   jupyterEnvironment =
     jupyter.jupyterlabWith {
